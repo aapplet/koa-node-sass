@@ -25,7 +25,7 @@ function middleware({src, css, gzip, force, maxAge, extname, browsers, sourceMap
     if (!src) {
         throw new Error('[koa-node-sass]: required src')
     }
-    if (!/^\.s[c|a]ss$/.test(extname)) {
+    if (extname && !/^\.s[c|a]ss$/.test(extname)) {
         throw new Error(`[koa-node-sass]: The extname is '.scss' or '.sass'`)
     }
 
