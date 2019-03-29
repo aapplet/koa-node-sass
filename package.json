@@ -1,8 +1,8 @@
 {
   "name": "koa-node-sass",
-  "version": "6.4.0",
+  "version": "6.5.0",
   "description": "Koa SASS/SCSS middleware",
-  "main": "index.ts",
+  "main": "lib/index.ts",
   "typings": "index.d.ts",
   "repository": {
     "type": "git",
