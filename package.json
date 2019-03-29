@@ -1,0 +1,28 @@
+{
+  "name": "koa-node-sass",
+  "version": "1.0.0",
+  "description": "Koa SASS/SCSS middleware",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lxzgg/koa-node-sass.git"
+  },
+  "keywords": [
+    "koa",
+    "sass",
+    "postcss",
+    "node-sass",
+    "autoprefixer"
+  ],
+  "author": "Prosperous",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lxzgg/koa-node-sass/issues"
+  },
+  "homepage": "https://github.com/lxzgg/koa-node-sass#readme",
+  "dependencies": {
+    "autoprefixer": "^9.5.0",
+    "postcss": "^7.0.14",
+    "sass": "^1.17.3"
+  }
+}
