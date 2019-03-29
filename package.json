@@ -1,8 +1,9 @@
 {
   "name": "koa-node-sass",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Koa SASS/SCSS middleware",
-  "main": "index.js",
+  "main": "index.ts",
+  "typings": "index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lxzgg/koa-node-sass.git"
@@ -24,5 +25,8 @@
     "autoprefixer": "^9.5.0",
     "postcss": "^7.0.14",
     "sass": "^1.17.3"
+  },
+  "devDependencies": {
+    "@types/node": "^11.12.1"
   }
 }
