@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "esnext",
-    "declaration": true,
+    "declaration": false,
     "sourceMap": false
   },
   "exclude": [
