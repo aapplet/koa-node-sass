@@ -1,6 +1,6 @@
 {
   "name": "koa-node-sass",
-  "version": "6.6.6",
+  "version": "6.7.0",
   "description": "Koa SASS/SCSS middleware",
   "main": "index.js",
   "typings": "index.d.ts",
@@ -27,6 +27,6 @@
     "sass": "^1.17.3"
   },
   "devDependencies": {
-    "@types/node": "^11.12.1"
+    "@types/node": "^11.12.2"
   }
 }

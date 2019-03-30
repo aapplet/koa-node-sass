@@ -1,16 +1,16 @@
-declare function middleware({src, css, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log}: {
-    src?: any;
-    css?: any;
-    gzip?: any;
-    force?: any;
-    maxAge?: any;
-    extname?: any;
-    browsers?: any;
-    sourceMap?: any;
-    prefix?: any;
-    plugins?: any;
-    sass?: any;
-    log?: any;
+declare function middleware({ src, css, init, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log }: {
+    src: string;
+    css?: string;
+    init?: boolean;
+    gzip?: boolean;
+    force?: boolean;
+    maxAge?: number;
+    extname?: '.sass' | '.scss';
+    browsers?: string | string[];
+    sourceMap?: boolean;
+    prefix?: string;
+    plugins?: object;
+    sass?: object;
+    log?: (ctx?: any, logs?: any, err?: any) => void;
 }): (ctx?: any, next?: any) => Promise<any>;
-
-export default middleware
+export default middleware;

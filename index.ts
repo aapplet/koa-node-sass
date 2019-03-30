@@ -7,9 +7,12 @@ const postcss = require('postcss')
 const autoPrefix = require('autoprefixer')
 
 const stat = util.promisify(fs.stat)
+const readdir = util.promisify(fs.readdir)
 
 // default options
-const opts = {
+const opts: any = {
+    srcPath: '',
+    cssPath: '',
     maxAge: 0,
     gzip: false,
     force: false,
@@ -21,17 +24,33 @@ const opts = {
     sass: sass,
 }
 
-function middleware({src, css, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log}) {
-    if (!src) {
+function middleware({src, css, init, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log}: {
+    src: string;
+    css?: string;
+    init?: boolean
+    gzip?: boolean;
+    force?: boolean;
+    maxAge?: number;
+    extname?: '.sass' | '.scss';
+    browsers?: string | string[];
+    sourceMap?: boolean;
+    prefix?: string;
+    plugins?: object;
+    sass?: object;
+    log?: (ctx?, logs?, err?) => void;
+}) {
+    if (!src || !isString(src)) {
         throw new Error('[koa-node-sass]: required src')
+    }
+    if (prefix && !isString(prefix)) {
+        throw new Error('[koa-node-sass]: prefix is string')
     }
     if (extname && !/^\.s[c|a]ss$/.test(extname)) {
         throw new Error(`[koa-node-sass]: The extname is '.scss' or '.sass'`)
     }
 
-    const srcPath = path.resolve(src || __dirname)
-    const cssPath = css || srcPath
-
+    opts.srcPath = path.resolve(src || '')
+    opts.cssPath = css || opts.srcPath
     opts.gzip = gzip || opts.gzip
     opts.sass = sass || opts.sass
     opts.force = force || opts.force
@@ -42,9 +61,17 @@ function middleware({src, css, gzip, force, maxAge, extname, browsers, sourceMap
     opts.urlPrefix = path.join('/', prefix || '')
     opts.plugins = plugins || autoPrefix({browsers: opts.browsers})
 
-    const logs: any = {options: opts}
+    if (init) {
+        fileSearch(opts.srcPath)
+    }
 
-    return async (ctx, next) => {
+    const logs = {srcFile: '', cssFile: '', options: opts}
+
+    if (log) {
+        log(null, logs)
+    }
+
+    return async (ctx?: any, next?: any) => {
         try {
             if (ctx.method !== 'GET' && ctx.method !== 'HEAD') {
                 return next()
@@ -56,8 +83,8 @@ function middleware({src, css, gzip, force, maxAge, extname, browsers, sourceMap
 
             const url = path.relative(opts.urlPrefix, ctx.url)
 
-            const srcFile = path.join(srcPath, url.replace(/\.css$/, opts.extname))
-            const cssFile = path.join(cssPath, url)
+            const srcFile = path.join(opts.srcPath, url.replace(/\.css$/, opts.extname))
+            const cssFile = path.join(opts.cssPath, url)
 
             if (log) {
                 logs.srcFile = srcFile
@@ -123,7 +150,6 @@ async function compare(srcFile, cssFile) {
 }
 
 async function compile(srcFile, cssFile) {
-
     // Create if the directory does not exist
     mkdirSync(path.dirname(cssFile))
 
@@ -155,6 +181,32 @@ async function compile(srcFile, cssFile) {
     fs.writeFile(cssFile, content, () => true)
 
     return content
+}
+
+// search and compile files
+function fileSearch(dirPath) {
+    readdir(dirPath).then(files => {
+        files.forEach(fileName => {
+            const srcPath = path.join(dirPath, fileName)
+            stat(srcPath).then(stats => {
+                if (stats.isDirectory()) return fileSearch(srcPath)
+                if (!/\.s[a|c]ss$/.test(fileName)) return
+                let relative = path.relative(opts.srcPath, srcPath)
+                let cssPath = path.join(opts.cssPath, relative.replace(/\.s[a|c]ss$/, '.css'))
+                compile(srcPath, cssPath).then(content => {
+                    if (!opts.gzip) return
+                    const gzip = zlib.createGzip({level: 9})
+                    gzip.pipe(fs.createWriteStream(cssPath + '.gz'))
+                    gzip.end(content)
+                })
+
+            })
+        })
+    })
+}
+
+function isString(obj) {
+    return Object.prototype.toString.call(obj) === '[object String]'
 }
 
 // create dir

@@ -8,8 +8,11 @@ const sass = require('sass');
 const postcss = require('postcss');
 const autoPrefix = require('autoprefixer');
 const stat = util.promisify(fs.stat);
+const readdir = util.promisify(fs.readdir);
 // default options
 const opts = {
+    srcPath: '',
+    cssPath: '',
     maxAge: 0,
     gzip: false,
     force: false,
@@ -20,15 +23,18 @@ const opts = {
     plugins: [],
     sass: sass,
 };
-function middleware({ src, css, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log }) {
-    if (!src) {
+function middleware({ src, css, init, gzip, force, maxAge, extname, browsers, sourceMap, prefix, plugins, sass, log }) {
+    if (!src || !isString(src)) {
         throw new Error('[koa-node-sass]: required src');
+    }
+    if (prefix && !isString(prefix)) {
+        throw new Error('[koa-node-sass]: prefix is string');
     }
     if (extname && !/^\.s[c|a]ss$/.test(extname)) {
         throw new Error(`[koa-node-sass]: The extname is '.scss' or '.sass'`);
     }
-    const srcPath = path.resolve(src || __dirname);
-    const cssPath = css || srcPath;
+    opts.srcPath = path.resolve(src || '');
+    opts.cssPath = css || opts.srcPath;
     opts.gzip = gzip || opts.gzip;
     opts.sass = sass || opts.sass;
     opts.force = force || opts.force;
@@ -38,7 +44,13 @@ function middleware({ src, css, gzip, force, maxAge, extname, browsers, sourceMa
     opts.sourceMap = sourceMap || opts.sourceMap;
     opts.urlPrefix = path.join('/', prefix || '');
     opts.plugins = plugins || autoPrefix({ browsers: opts.browsers });
-    const logs = { options: opts };
+    if (init) {
+        fileSearch(opts.srcPath);
+    }
+    const logs = { srcFile: '', cssFile: '', options: opts };
+    if (log) {
+        log(null, logs);
+    }
     return async (ctx, next) => {
         try {
             if (ctx.method !== 'GET' && ctx.method !== 'HEAD') {
@@ -48,8 +60,8 @@ function middleware({ src, css, gzip, force, maxAge, extname, browsers, sourceMa
                 return next();
             }
             const url = path.relative(opts.urlPrefix, ctx.url);
-            const srcFile = path.join(srcPath, url.replace(/\.css$/, opts.extname));
-            const cssFile = path.join(cssPath, url);
+            const srcFile = path.join(opts.srcPath, url.replace(/\.css$/, opts.extname));
+            const cssFile = path.join(opts.cssPath, url);
             if (log) {
                 logs.srcFile = srcFile;
                 logs.cssFile = cssFile;
@@ -130,6 +142,32 @@ async function compile(srcFile, cssFile) {
     // create *.css file
     fs.writeFile(cssFile, content, () => true);
     return content;
+}
+// search and compile files
+function fileSearch(dirPath) {
+    readdir(dirPath).then(files => {
+        files.forEach(fileName => {
+            const srcPath = path.join(dirPath, fileName);
+            stat(srcPath).then(stats => {
+                if (stats.isDirectory())
+                    return fileSearch(srcPath);
+                if (!/\.s[a|c]ss$/.test(fileName))
+                    return;
+                let relative = path.relative(opts.srcPath, srcPath);
+                let cssPath = path.join(opts.cssPath, relative.replace(/\.s[a|c]ss$/, '.css'));
+                compile(srcPath, cssPath).then(content => {
+                    if (!opts.gzip)
+                        return;
+                    const gzip = zlib.createGzip({ level: 9 });
+                    gzip.pipe(fs.createWriteStream(cssPath + '.gz'));
+                    gzip.end(content);
+                });
+            });
+        });
+    });
+}
+function isString(obj) {
+    return Object.prototype.toString.call(obj) === '[object String]';
 }
 // create dir
 function mkdirSync(dirname) {
