@@ -57,7 +57,7 @@ app.use(serve('static'));
 
 app.listen(3000);
 ```
-#
+##
 ```js
 // app.js
 const sass = require('koa-node-sass').default;
@@ -65,9 +65,9 @@ const sass = require('koa-node-sass').default;
 /**
 * All options:
 *   sass({
-*       src:path.join(__dirname, 'static', 'scss'), 
-*       css: path.join(__dirname, 'public', 'css'),  // default srcPath   - css Output directory
-*       init:true,
+*       src: path.join(__dirname, 'static', 'scss'), 
+*       css: path.join(__dirname, 'public', 'css'),
+*       init: true,
 *       gzip: true,
 *       sourceMap: true,
 *       sass: nodeSass,
